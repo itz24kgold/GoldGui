@@ -311,7 +311,7 @@ local FlingTarget_Button = Instance.new("TextButton")
 local GetBenxedTarget_Button = Instance.new("TextButton")
 local BenxTarget_Button = Instance.new("TextButton")
 local CopyTargetUser_Button = Instance.new("TextButton")
-local WhitelistTarget_Button = Instance.new("TextButton")
+local CopyTargetUserID_Button = Instance.new("TextButton")
 local TeleportTarget_Button = Instance.new("TextButton")
 local HeadsitTarget_Button = Instance.new("TextButton")
 local StandTarget_Button = Instance.new("TextButton")
@@ -654,20 +654,20 @@ CopyTargetUser_Button.TextScaled = true
 CopyTargetUser_Button.TextSize = 14.000
 CopyTargetUser_Button.TextWrapped = true
 
-WhitelistTarget_Button.Name = "WhitelistTarget_Button"
-WhitelistTarget_Button.Parent = Target_Section
-WhitelistTarget_Button.BackgroundColor3 = Color3.fromRGB(255, 215, 0)
-WhitelistTarget_Button.BackgroundTransparency = 0.500
-WhitelistTarget_Button.BorderColor3 = Color3.fromRGB(0, 0, 0)
-WhitelistTarget_Button.BorderSizePixel = 0
-WhitelistTarget_Button.Position = UDim2.new(0, 210, 0, 400)
-WhitelistTarget_Button.Size = UDim2.new(0, 150, 0, 30)
-WhitelistTarget_Button.Font = Enum.Font.Oswald
-WhitelistTarget_Button.Text = "Whitelist"
-WhitelistTarget_Button.TextColor3 = Color3.fromRGB(0, 0, 0)
-WhitelistTarget_Button.TextScaled = true
-WhitelistTarget_Button.TextSize = 14.000
-WhitelistTarget_Button.TextWrapped = true
+CopyTargetUserID_Button.Name = "CopyTargetUserID_Button"
+CopyTargetUserID_Button.Parent = Target_Section
+CopyTargetUserID_Button.BackgroundColor3 = Color3.fromRGB(255, 215, 0)
+CopyTargetUserID_Button.BackgroundTransparency = 0.500
+CopyTargetUserID_Button.BorderColor3 = Color3.fromRGB(0, 0, 0)
+CopyTargetUserID_Button.BorderSizePixel = 0
+CopyTargetUserID_Button.Position = UDim2.new(0, 210, 0, 400)
+CopyTargetUserID_Button.Size = UDim2.new(0, 150, 0, 30)
+CopyTargetUserID_Button.Font = Enum.Font.Oswald
+CopyTargetUserID_Button.Text = "Copy ID"
+CopyTargetUserID_Button.TextColor3 = Color3.fromRGB(0, 0, 0)
+CopyTargetUserID_Button.TextScaled = true
+CopyTargetUserID_Button.TextSize = 14.000
+CopyTargetUserID_Button.TextWrapped = true
 
 TeleportTarget_Button.Name = "TeleportTarget_Button"
 TeleportTarget_Button.Parent = Target_Section
@@ -1153,7 +1153,7 @@ CreateToggle(BackpackTarget_Button)
 CreateToggle(DoggyTarget_Button)
 CreateToggle(OrbitTarget_Button)
 CreateClicker(CopyTargetUser_Button)
-CreateClicker(WhitelistTarget_Button)
+CreateClicker(CopyTargetUserID_Button)
 CreateClicker(TeleportTarget_Button)
 
 CreateToggle(AntiFling_Button)
@@ -1855,20 +1855,22 @@ TeleportTarget_Button.MouseButton1Click:Connect(function()
 	end
 end)
 
-WhitelistTarget_Button.MouseButton1Click:Connect(function()
-	if TargetedPlayer ~= nil then
-		if table.find(ScriptWhitelist, Players[TargetedPlayer].UserId) then
-			for i,v in pairs(ScriptWhitelist) do
-				if v == Players[TargetedPlayer].UserId then
-					table.remove(ScriptWhitelist, i)
-				end
-			end
-			SendNotify("Gold GUI",TargetedPlayer.." removed from whitelist.",5)
-		else
-			table.insert(ScriptWhitelist, Players[TargetedPlayer].UserId)
-			SendNotify("Gold GUI",TargetedPlayer.." added to whitelist.", 5)
-		end
-	end
+CopyTargetUserID_Button.MouseButton1Click:Connect(function()
+    if TargetedPlayer ~= nil then
+        local targetPlayer = Players:FindFirstChild(TargetedPlayer)
+
+        if targetPlayer then
+            local userId = tostring(targetPlayer.UserId)
+
+            if setclipboard then
+                setclipboard(userId)
+            elseif toclipboard then
+                toclipboard(userId)
+            end
+
+            SendNotify("Gold GUI", "User ID copied to clipboard", 5)
+        end
+    end
 end)
 
 TargetName_Input.FocusLost:Connect(function()
