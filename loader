@@ -31,7 +31,7 @@ local FlySpeed = 50
 local PotionTool = nil
 local SavedCheckpoint = nil
 local MinesFolder = nil
-local FreeEmotesEnabled = false
+local FreeEmotesEnaled = false
 local CannonsFolders = {}
 
 -- COLOR CONSTANTS (GOLD THEMED)
@@ -347,8 +347,6 @@ local FlyAButton = Instance.new("TextButton")
 local FlyDButton = Instance.new("TextButton")
 local FlyWButton = Instance.new("TextButton")
 local FlySButton = Instance.new("TextButton")
-local OpenClose = Instance.new("ImageButton")
-local UICornerOC = Instance.new("UICorner")
 
 local function CreateToggle(Button)
 	local NewToggle = Ticket_Asset:Clone()
@@ -1098,19 +1096,6 @@ FlySButton.Text = ""
 FlySButton.TextColor3 = Color3.fromRGB(0, 0, 0)
 FlySButton.TextSize = 25.000
 FlySButton.TextWrapped = true
-
-OpenClose.Name = "OpenClose"
-OpenClose.Parent = SysBroker
-OpenClose.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
-OpenClose.BorderColor3 = Color3.fromRGB(0, 0, 0)
-OpenClose.BorderSizePixel = 0
-OpenClose.Position = UDim2.new(0, 0, 0.5, 0)
-OpenClose.Size = UDim2.new(0, 30, 0, 30)
-OpenClose.Image = "rbxassetid://12298407748"
-OpenClose.ImageColor3 = Color3.fromRGB(255, 215, 0)
-
-UICornerOC.CornerRadius = UDim.new(1, 0)
-UICornerOC.Parent = OpenClose
 
 CreateToggle(AntiRagdoll_Button)
 CreateToggle(PushAura_Button)
@@ -2120,10 +2105,6 @@ plr.CharacterAdded:Connect(function(x)
 		game:GetService("TeleportService"):TeleportToPlaceInstance(game.PlaceId, game.JobId, plr)
 	end
 	appearance:Destroy()
-end)
-
-OpenClose.MouseButton1Click:Connect(function()
-	Background.Visible = not Background.Visible
 end)
 
 game:GetService("UserInputService").InputBegan:Connect(function(input,gameProcessedEvent)
