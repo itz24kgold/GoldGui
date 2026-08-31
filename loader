@@ -316,7 +316,7 @@ local TeleportTarget_Button = Instance.new("TextButton")
 local HeadsitTarget_Button = Instance.new("TextButton")
 local StandTarget_Button = Instance.new("TextButton")
 local BackpackTarget_Button = Instance.new("TextButton")
-local DoggyTarget_Button = Instance.new("TextButton")
+local CopyAnim_Button = Instance.new("TextButton")
 local OrbitTarget_Button = Instance.new("TextButton")
 
 --NEWS
@@ -727,20 +727,20 @@ BackpackTarget_Button.TextScaled = true
 BackpackTarget_Button.TextSize = 14.000
 BackpackTarget_Button.TextWrapped = true
 
-DoggyTarget_Button.Name = "DoggyTarget_Button"
-DoggyTarget_Button.Parent = Target_Section
-DoggyTarget_Button.BackgroundColor3 = Color3.fromRGB(255, 215, 0)
-DoggyTarget_Button.BackgroundTransparency = 0.500
-DoggyTarget_Button.BorderColor3 = Color3.fromRGB(0, 0, 0)
-DoggyTarget_Button.BorderSizePixel = 0
-DoggyTarget_Button.Position = UDim2.new(0, 25, 0, 300)
-DoggyTarget_Button.Size = UDim2.new(0, 150, 0, 30)
-DoggyTarget_Button.Font = Enum.Font.Oswald
-DoggyTarget_Button.Text = "Doggy (target must be R15)"
-DoggyTarget_Button.TextColor3 = Color3.fromRGB(0, 0, 0)
-DoggyTarget_Button.TextScaled = true
-DoggyTarget_Button.TextSize = 14.000
-DoggyTarget_Button.TextWrapped = true
+CopyAnim_Button.Name = "CopyAnim_Button"
+CopyAnim_Button.Parent = Target_Section
+CopyAnim_Button.BackgroundColor3 = Color3.fromRGB(255, 215, 0)
+CopyAnim_Button.BackgroundTransparency = 0.500
+CopyAnim_Button.BorderColor3 = Color3.fromRGB(0, 0, 0)
+CopyAnim_Button.BorderSizePixel = 0
+CopyAnim_Button.Position = UDim2.new(0, 25, 0, 300)
+CopyAnim_Button.Size = UDim2.new(0, 150, 0, 30)
+CopyAnim_Button.Font = Enum.Font.Oswald
+CopyAnim_Button.Text = "Copy Anim (target must be R15)"
+CopyAnim_Button.TextColor3 = Color3.fromRGB(0, 0, 0)
+CopyAnim_Button.TextScaled = true
+CopyAnim_Button.TextSize = 14.000
+CopyAnim_Button.TextWrapped = true
 
 OrbitTarget_Button.Name = "OrbitTarget_Button"
 OrbitTarget_Button.Parent = Target_Section
@@ -1135,7 +1135,7 @@ CreateToggle(BenxTarget_Button)
 CreateToggle(HeadsitTarget_Button)
 CreateToggle(StandTarget_Button)
 CreateToggle(BackpackTarget_Button)
-CreateToggle(DoggyTarget_Button)
+CreateToggle(CopyAnim_Button)
 CreateToggle(OrbitTarget_Button)
 CreateClicker(CopyTargetUser_Button)
 CreateClicker(CopyTargetUserID_Button)
@@ -1185,7 +1185,7 @@ local function UpdateTarget(player)
 	if (player ~= nil) then
 		TargetedPlayer = player.Name
 		TargetName_Input.Text = player.Name
-		UserIDTargetLabel.Text = ("UserID: "..player.UserId.."\nDisplay: "..player.DisplayName.."\nJoined: "..os.date("%d-%m-%Y", os.time()-player.AccountAge * 24 * 3600).." [Day/Month/Year]")
+		UserIDTargetLabel.Text = ("UserID: "..player.UserId.."\nDisplay: "..player.DisplayName.."\nJoined: "..os.date("%d-%m-%Y", os.time()-player.AccountAge * 24 * 3600).. " [Day/Month/Year]")
 		TargetImage.Image = Players:GetUserThumbnailAsync(player.UserId,Enum.ThumbnailType.HeadShot,Enum.ThumbnailSize.Size420x420)
 	else
 		TargetName_Input.Text = "@target..."
@@ -1202,7 +1202,7 @@ local function UpdateTarget(player)
 		HeadsitTarget_Button.Ticket_Asset.ImageColor3 = INACTIVE_COLOR
 		StandTarget_Button.Ticket_Asset.ImageColor3 = INACTIVE_COLOR
 		BackpackTarget_Button.Ticket_Asset.ImageColor3 = INACTIVE_COLOR
-		DoggyTarget_Button.Ticket_Asset.ImageColor3 = INACTIVE_COLOR
+		CopyAnim_Button.Ticket_Asset.ImageColor3 = INACTIVE_COLOR
 		OrbitTarget_Button.Ticket_Asset.ImageColor3 = INACTIVE_COLOR
 	end
 end
@@ -1739,30 +1739,122 @@ BackpackTarget_Button.MouseButton1Click:Connect(function()
 	end
 end)
 
-DoggyTarget_Button.MouseButton1Click:Connect(function()
-	if TargetedPlayer ~= nil then
-		ChangeToggleColor(DoggyTarget_Button)
-		if DoggyTarget_Button.Ticket_Asset.ImageColor3 == ACTIVE_COLOR then
-			PlayAnim(13694096724,3.4,0)
-			repeat
-				pcall(function()
-					if not GetRoot(plr):FindFirstChild("BreakVelocity") then
-						pcall(function()
-							local TempV = Velocity_Asset:Clone()
-							TempV.Parent = GetRoot(plr)
-						end)
-					end
-					local root = Players[TargetedPlayer].Character.LowerTorso
-					GetRoot(plr).CFrame = root.CFrame * CFrame.new(2,0.23,-2)
-					GetRoot(plr).Velocity = Vector3.new(0,0,0)
-				end)
-				task.wait()
-			until DoggyTarget_Button.Ticket_Asset.ImageColor3 == INACTIVE_COLOR
-			StopAnim()
-			if GetRoot(plr):FindFirstChild("BreakVelocity") then
-				GetRoot(plr).BreakVelocity:Destroy()
+-- CopyAnim TARGET: COPY TARGET ANIMATION ONLY (NO POSITION/VELOCITY)
+local CopyAnimCopyConnection
+local CopyAnimCopiedTracks = {}
+
+local function GetAnimationId(track)
+	if not track or not track.Animation then
+		return nil
+	end
+
+	local id = track.Animation.AnimationId
+	return id and id ~= "" and id or nil
+end
+
+local function StopCopiedAnimations()
+	for _, track in pairs(CopyAnimCopiedTracks) do
+		pcall(function()
+			track:Stop(0.1)
+			track:Destroy()
+		end)
+	end
+
+	table.clear(CopyAnimCopiedTracks)
+end
+
+local function CopyTargetAnimations()
+	local targetPlayer = Players:FindFirstChild(TargetedPlayer)
+	if not targetPlayer or not targetPlayer.Character then
+		return
+	end
+
+	local targetHumanoid =
+		targetPlayer.Character:FindFirstChildOfClass("Humanoid")
+
+	local myCharacter = plr.Character
+	local myHumanoid =
+		myCharacter and myCharacter:FindFirstChildOfClass("Humanoid")
+
+	if not targetHumanoid or not myHumanoid then
+		return
+	end
+
+	local targetAnimator =
+		targetHumanoid:FindFirstChildOfClass("Animator")
+
+	local myAnimator =
+		myHumanoid:FindFirstChildOfClass("Animator")
+
+	if not targetAnimator or not myAnimator then
+		return
+	end
+
+	local activeAnimations = {}
+
+	for _, targetTrack in ipairs(targetAnimator:GetPlayingAnimationTracks()) do
+		local animationId = GetAnimationId(targetTrack)
+
+		if animationId then
+			activeAnimations[animationId] = true
+
+			local myTrack = CopyAnimCopiedTracks[animationId]
+
+			if not myTrack then
+				local animation = Instance.new("Animation")
+				animation.AnimationId = animationId
+
+				myTrack = myAnimator:LoadAnimation(animation)
+				CopyAnimCopiedTracks[animationId] = myTrack
+
+				myTrack:Play(0.1)
 			end
+
+			pcall(function()
+				myTrack:AdjustSpeed(targetTrack.Speed)
+				myTrack:AdjustWeight(targetTrack.WeightCurrent)
+
+				if math.abs(myTrack.TimePosition - targetTrack.TimePosition) > 0.15 then
+					myTrack.TimePosition = targetTrack.TimePosition
+				end
+			end)
 		end
+	end
+
+	for animationId, myTrack in pairs(CopyAnimCopiedTracks) do
+		if not activeAnimations[animationId] then
+			pcall(function()
+				myTrack:Stop(0.1)
+				myTrack:Destroy()
+			end)
+
+			CopyAnimCopiedTracks[animationId] = nil
+		end
+	end
+end
+
+CopyAnim_Button.MouseButton1Click:Connect(function()
+	if not TargetedPlayer then
+		return
+	end
+
+	ChangeToggleColor(CopyAnim_Button)
+
+	if CopyAnim_Button.Ticket_Asset.ImageColor3 == ACTIVE_COLOR then
+		CopyAnimCopyConnection = RunService.Heartbeat:Connect(function()
+			if CopyAnim_Button.Ticket_Asset.ImageColor3 ~= ACTIVE_COLOR then
+				return
+			end
+
+			pcall(CopyTargetAnimations)
+		end)
+	else
+		if CopyAnimCopyConnection then
+			CopyAnimCopyConnection:Disconnect()
+			CopyAnimCopyConnection = nil
+		end
+
+		StopCopiedAnimations()
 	end
 end)
 
